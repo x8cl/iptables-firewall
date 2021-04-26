@@ -12,6 +12,8 @@ Uso:
 8. agragar:
 0 0 * * * sh /root/firewall/firewall.sh >/dev/null 2>&1
 
-stop.sh puede borar todas las reglas y puede ser utilizado para mejorar el inicio en systemd o en un crond por si se mandan un "cagazo": 
+stop.sh NO ES NECESARIO, y borrará todas las reglas. Puede ser utilizado en crond por si nos mandamos un "cagazo" en iptables y dejará todo limpio dentro de 0/5 (5 minutos)
+Es el "salvavidas" si estamos negando todas las conexiones (INPUT DROP) 
 
 */5 0 * * * sh /root/firewall/stop.sh >/dev/null 2>&1
+
