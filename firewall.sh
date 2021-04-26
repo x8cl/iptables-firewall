@@ -50,14 +50,8 @@ iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
 ##Aceptamos todo en ens256 (LAN)
-iptables -A INPUT -i ens265 -j ACCEPT
-iptables -A OUTPUT -o ens256 -j ACCEPT
-
-##DNS
-##Aceptamos DNS1
-#iptables -A INPUT -s 8.8.8.8 -p udp -m udp --sport 53 -m state --state ESTABLISHED -j ACCEPT
-##Aceptamos DNS2
-#iptables -A INPUT -s 8.8.4.4 -p udp -m udp --sport 53 -m state --state ESTABLISHED -j ACCEPT
+#iptables -A INPUT -i ens265 -j ACCEPT
+#iptables -A OUTPUT -o ens256 -j ACCEPT
 
 ##PING
 ##Acepto ping (reply) hacia el exterior
