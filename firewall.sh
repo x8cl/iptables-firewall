@@ -3,13 +3,12 @@
 echo "Descargando el archivo desde iblocklist..."
 ##Gratis (P2P/gz) Chile
 curl -L 'http://list.iblocklist.com/?list=cl&fileformat=p2p&archiveformat=gz' | gunzip | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | awk -F ':' '{print $2}' > cl.zone
-
 ##Pagado (CIDR/gz)
 #curl -L -A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" "http://list.iblocklist.com/?list=qssnpurblcxquvmnepba&fileformat=cidr&archiveformat=gz&username=netvoiss&pin=913915" | gunzip | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' > iblocklist.zone
 
 ###Descargar el archivo otras.zone
-echo "Descargando el archivo otras.zone..."
-curl "https://datacenter.netvoiss.cl/firewall/lista_blanca/otras.zone" | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' > otras.zone
+#echo "Descargando el archivo otras.zone..."
+#curl "https://datacenter.netvoiss.cl/firewall/lista_blanca/otras.zone" | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' > otras.zone
 
 ###IPSET by MAB
 echo "Creando ipset \"temporal\"..."
@@ -50,9 +49,9 @@ echo "Aplicando Reglas de Firewall ipv4..."
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
-##Aceptamos todo en ens156
-iptables -A INPUT -i ens165 -j ACCEPT
-iptables -A OUTPUT -o ens156 -j ACCEPT
+##Aceptamos todo en ens256 (LAN)
+iptables -A INPUT -i ens265 -j ACCEPT
+iptables -A OUTPUT -o ens256 -j ACCEPT
 
 ##DNS
 ##Aceptamos DNS1
@@ -62,22 +61,19 @@ iptables -A OUTPUT -o ens156 -j ACCEPT
 
 ##PING
 ##Acepto ping (reply) hacia el exterior
-#iptables -A INPUT -p icmp --icmp-type echo-reply -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p icmp --icmp-type echo-reply -m state --state ESTABLISHED,RELATED -j ACCEPT
 ##Aceptamos respuesta a las conexiones ya establecidas
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-##SSH
-#Acepto solo IPs del ipset "ssh" para SSH TCP 10041
-iptables -A INPUT -m set --match-set ssh src -m tcp -p tcp --dport 10041 -j ACCEPT
-iptables -A INPUT -m set --match-set ssh src -p icmp --icmp-type echo-request -j ACCEPT
+#Acepto solo IPs del ipset "permitidas" para Ping
+iptables -A INPUT -m set --match-set permitidas src -p icmp --icmp-type echo-request -j ACCEPT
 
 ##Abrimos puertos de los servicios
-#Acepto Ping desde "permitidas"
-iptables -A INPUT -m set --match-set permitidas src -p icmp --icmp-type echo-request -j ACCEPT
+#Acepto solo IPs del ipset "permitidas" para SSH TCP 10041
+iptables -A INPUT -m set --match-set permitidas src -m tcp -p tcp --dport 10041 -j ACCEPT
 #Acepto solo IPs del ipset "permitidas" para SIP en UDP 5060 en eth0
-iptables -A INPUT -m set --match-set permitidas src -m udp -p udp --dport 5060 -j ACCEPT
+#iptables -A INPUT -m set --match-set permitidas src -m udp -p udp --dport 5060 -j ACCEPT
 #Acepto paquetes RTP de cualquir parte en UDP 10000:20000 en eth0
-iptables -A INPUT -m udp -p udp --dport 10000:20000 -j ACCEPT
+#iptables -A INPUT -m udp -p udp --dport 10000:20000 -j ACCEPT
 
 ##IPv6
 echo "Limpiando Reglas de Firewall ipv6..."
