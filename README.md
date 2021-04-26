@@ -11,3 +11,7 @@ Uso:
 7. crontab -e
 8. agragar:
 0 0 * * * sh /root/firewall/firewall.sh >/dev/null 2>&1
+
+stop.sh puede borar todas las reglas y puede ser utilizado para mejorar el inicio en systemd o en un crond por si se mandan un "cagazo": 
+
+*/5 0 * * * sh /root/firewall/stop.sh >/dev/null 2>&1
