@@ -11,18 +11,15 @@ curl -L 'http://list.iblocklist.com/?list=cl&fileformat=p2p&archiveformat=gz' | 
 #curl "https://datacenter.netvoiss.cl/firewall/lista_blanca/otras.zone" | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' > otras.zone
 
 ###IPSET by MAB
-echo "Creando ipset \"temporal\"..."
-ipset create temporal hash:net
-echo "Agregando IPs permitidas al ipset \"temporal\"..."
-for IP in $(cat /root/firewall/*.zone | grep -v \# | grep -v '^[[:space:]]*$') ; do ipset -A temporal $IP -exist ; done
-echo "Creando el ipset \"permitidas\"..."
+echo "-----IPSET by MAB-----"
+echo "Creando/Limpiando ipset \"permitidas\"..."
 ipset create permitidas hash:net -exist
-echo "Volacando las IPs del ipset \"temporal\" al ipset \"permitidas\"..."
-ipset swap permitidas temporal
-echo "Eliminando el ipset \"temporal\"..."
-ipset destroy temporal
+ipset flush permitidas
+echo "Agregando IPs permitidas al ipset \"permitidas\"..."
+for IP in $(cat /root/firewall/*.zone | grep -v \# | grep -v '^[[:space:]]*$') ; do ipset -A permitidas $IP -exist ; done
 
 ###IPTables By MAB
+echo "-----IPTABLES by MAB-----"
 ##Limpiando Reglas anteriores
 echo "Limpiando Reglas de Firewall ipv4..."
 iptables -F
@@ -38,30 +35,32 @@ iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
 
 ##Creando nuevas POLICY con DROP
-echo "Aplicando POLICY DROP por defecto ipv4..."
+echo "Aplicando POLICY INPUT y FORWARD DROP ipv4..."
 iptables -P INPUT DROP
 iptables -P FORWARD DROP
 iptables -P OUTPUT ACCEPT
 
 ##Creando nuevas reglas del firewall
 echo "Aplicando Reglas de Firewall ipv4..."
-##Aceptamos todo en loopback
+echo "Aceptamos todo en loopback..."
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
-##Aceptamos todo en ens256 (LAN)
+##Aceptamos todo en LAN
+#echo "Aceptamos todo desde/hacia LAN..."
 #iptables -A INPUT -i ens265 -j ACCEPT
 #iptables -A OUTPUT -o ens256 -j ACCEPT
 
 ##PING
-##Acepto ping (reply) hacia el exterior
+echo "Aceptamos ping reply..."
 iptables -A INPUT -p icmp --icmp-type echo-reply -m state --state ESTABLISHED,RELATED -j ACCEPT
-##Aceptamos respuesta a las conexiones ya establecidas
-iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-#Acepto solo IPs del ipset "permitidas" para Ping
+echo "Aceptamos PING solo desde IPs del ipset \"permitidas\"..."
 iptables -A INPUT -m set --match-set permitidas src -p icmp --icmp-type echo-request -j ACCEPT
 
-##Abrimos puertos de los servicios
+echo "Aceptamos respuesta a las conexiones ya establecidas..."
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+echo "Abrimos puertos de los servicios solo desde IPs del ipset \"permitidas\"..."
 #Acepto solo IPs del ipset "permitidas" para SSH TCP 10041
 iptables -A INPUT -m set --match-set permitidas src -m tcp -p tcp --dport 10041 -j ACCEPT
 #Acepto solo IPs del ipset "permitidas" para SIP en UDP 5060 en eth0
@@ -83,7 +82,7 @@ ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
 ip6tables -P OUTPUT ACCEPT
 
-#echo "Aplicando POLICY DROP por defecto ipv6..."
+#echo "Aplicando POLICY INPUT y FORWARD DROP ipv6..."
 ip6tables -P INPUT DROP
 ip6tables -P FORWARD DROP
 ip6tables -P OUTPUT ACCEPT
@@ -93,3 +92,4 @@ echo "Aplicando Reglas de Firewall ipv6..."
 ##Aceptamos todo en loopback
 ip6tables -A INPUT -i lo -j ACCEPT
 ip6tables -A OUTPUT -o lo -j ACCEPT
+
