@@ -1,0 +1,10 @@
+[Unit]
+Description=IPTables Firewall by MAB
+After=libvirtd.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /root/firewall/firewall.sh
+
+[Install]
+WantedBy=multi-user.target
